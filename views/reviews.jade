@@ -1,0 +1,19 @@
+a(href='/') Return to HOME
+h1 Reviews
+
+if reviews
+	each review, i in reviews
+		li
+			p Review: #{review.body}
+			p Posted by #{review.username}
+			br
+			
+p Please enter review
+form(method='post',action='/users/reviews')
+	.form-group
+		label Username
+		input.form-control(name='username',type='text')
+	.form-group
+		label Review
+		input.form-control(name='body')
+	input.btn(name='submit',type='submit',value='Submit')

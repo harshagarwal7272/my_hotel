@@ -18,7 +18,6 @@ var index = require('./routes/index');
 var users = require('./routes/users');
 var contact = require('./routes/contact');
 var facilities = require('./routes/facilities');
-var reviews = require('./routes/reviews');
 var our_resort = require('./routes/our_resort');
 
 var app = express();
@@ -93,7 +92,6 @@ app.get('/',function(req,res){
 
 app.use('/users', users);
 app.use('/contact',contact);
-app.use('/reviews',reviews);
 app.use('/our_resort',our_resort);
 app.use('/facilities',facilities);
 

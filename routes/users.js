@@ -3,12 +3,24 @@ var router = express.Router();
 var multer = require('multer');
 var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
+var mongoose = require('mongoose');
+var db = require('monk')('localhost/my_hotel');
 
 var User = require('../models/user');
+
 
 /* GET users listing. */
 router.get('/', function(req, res, next) {
   res.send('respond with a resource');
+});
+
+router.get('/reviews', function(req, res) {
+  var reviews = db.get('reviews');
+  reviews.find({},{},function(err,reviews){
+      res.render('reviews',{
+        "reviews":reviews
+    });
+  });
 });
 
 router.get('/bookroom',function(req,res){
@@ -73,6 +85,41 @@ router.post('/register',function(req,res,next){
 		res.location('/');
 		res.redirect('/');
 	}
+});
+
+router.post('/reviews',function(req,res,next){
+  console.log("he yaa");
+  var username = req.body.username;
+  var body = req.body.body;
+
+  req.checkBody('username','username is required').notEmpty();
+  req.checkBody('body','Review is required').notEmpty();
+
+  var errors = req.validationErrors();
+
+  if(errors){
+    console.log("we");
+    var reviews = db.get("reviews");
+    res.render('reviews',{
+      "errors" : errors,
+      "reviews" : reviews
+    });
+  }else{
+    console.log("he");
+    var reviews = db.get("reviews");
+    reviews.insert({
+      "username":username,
+      "body":body
+    },function(err,review){
+      if(err){
+        res.send("error");
+      }else{
+        req.flash('success','review submitted');
+        res.location('/');
+        res.redirect('/');
+      }
+    });
+  }
 });
 
 passport.serializeUser(function(user,done){
