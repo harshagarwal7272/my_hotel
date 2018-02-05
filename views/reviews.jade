@@ -3,11 +3,14 @@ h1 Reviews
 
 if reviews
 	each review, i in reviews
-		li
-			p Review: #{review.body}
-			p Posted by #{review.username}
-			br
-			
+		li #{review.body}  by #{review.username}
+
+br
+
+if errors
+	each error,i in errors
+		li #{error.msg}
+
 p Please enter review
 form(method='post',action='/users/reviews')
 	.form-group

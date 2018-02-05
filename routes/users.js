@@ -99,10 +99,13 @@ router.post('/reviews',function(req,res,next){
 
   if(errors){
     console.log("we");
+    console.log(errors);
     var reviews = db.get("reviews");
-    res.render('reviews',{
-      "errors" : errors,
-      "reviews" : reviews
+    reviews.find({},{},function(err,reviews){
+        res.render('reviews',{
+          "errors":errors,
+          "reviews":reviews
+      });
     });
   }else{
     console.log("he");
