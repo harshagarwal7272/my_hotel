@@ -87,18 +87,25 @@ router.post('/register',function(req,res,next){
 	}
 });
 
-router.post('/reviews',function(req,res,next){
+router.post('/reviews',ensureAuthenticated,function(req,res,next){
   console.log("he yaa");
-  var username = req.body.username;
+  var username = req.user.username;
   var body = req.body.body;
 
-  req.checkBody('username','username is required').notEmpty();
+/*
+  var users = db.get("users");
+  var username;
+  users.findOne(user_id,function(err,user){
+    username = user.username
+    console.log(username);
+  });
+*/
+  console.log(username);
   req.checkBody('body','Review is required').notEmpty();
 
   var errors = req.validationErrors();
 
   if(errors){
-    console.log("we");
     console.log(errors);
     var reviews = db.get("reviews");
     reviews.find({},{},function(err,reviews){
@@ -108,7 +115,6 @@ router.post('/reviews',function(req,res,next){
       });
     });
   }else{
-    console.log("he");
     var reviews = db.get("reviews");
     reviews.insert({
       "username":username,
@@ -168,5 +174,14 @@ router.get('/logout',function(req,res){
 	req.flash('success','you have logged out');
 	res.redirect('/users/login');
 });
+
+function ensureAuthenticated(req,res,next){
+  if(req.isAuthenticated()){
+    return next();
+  }else{
+    req.flash('danger','please log in to review');
+    res.redirect('/users/login');
+  }
+}
 
 module.exports = router;

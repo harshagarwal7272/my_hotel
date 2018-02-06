@@ -13,10 +13,10 @@ if errors
 
 p Please enter review
 form(method='post',action='/users/reviews')
-	.form-group
-		label Username
-		input.form-control(name='username',type='text')
-	.form-group
-		label Review
-		input.form-control(name='body')
-	input.btn(name='submit',type='submit',value='Submit')
+	if user
+		.form-group
+			label Review
+			input.form-control(name='body')
+		input.btn(name='submit',type='submit',value='Submit')
+	if !user
+		p Log in to post your review
