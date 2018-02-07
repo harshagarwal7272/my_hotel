@@ -4,4 +4,7 @@ p Name : #{hotel.hotel_name}
 p Email : #{hotel.email}
 p Address : #{hotel.hotel_location}
 
-a(href='/users/bookroom/'+hotel._id) BookRoom
+if user
+  a(href='/users/bookroom/'+hotel._id) BookRoom
+if !user
+  a(href='/users/login') Login to book room

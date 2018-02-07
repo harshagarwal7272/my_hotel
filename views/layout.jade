@@ -23,6 +23,9 @@ html
 						a(href='/users/Register') Register
 				if user
 					li
+						a(href='/users/profile') Profile
+				if user
+					li
 						a(href='/users/logout') Logout
 		!= messages()
 		block content

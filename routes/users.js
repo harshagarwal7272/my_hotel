@@ -14,6 +14,17 @@ router.get('/', function(req, res, next) {
   res.send('respond with a resource');
 });
 
+router.get('/profile',ensureAuthenticated, function(req, res) {
+  var rooms_database = db.get('rooms_database');
+  var hotels = db.get('hotel_database');
+  var user__id = req.user._id;
+  rooms_database.find({user_id:user__id},function(err,rooms){
+    res.render('profile',{
+      "rooms":rooms
+    });
+  });
+});
+
 router.get('/reviews', function(req, res) {
   var reviews = db.get('reviews');
   reviews.find({},{},function(err,reviews){
@@ -67,6 +78,7 @@ router.post('/bookroom',function(req,res){
   var leave_date = req.body.leave_date;
   var room = req.body.cnt_room;
   var type = req.body.room_type;
+  var user_id = req.user._id;
 
   req.checkBody('cnt_adult','Enter the number of adults.').notEmpty();
   req.checkBody('cnt_child','Enter the number of child.').notEmpty();
@@ -99,6 +111,7 @@ router.post('/bookroom',function(req,res){
   }else{
       var rooms_database = db.get('rooms_database');
       rooms_database.insert({
+        "user_id":user_id,
         "hotel_id":hotel_id,
         "cnt_adult":adults,
         "cnt_child":child,
