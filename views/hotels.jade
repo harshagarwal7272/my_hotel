@@ -1,0 +1,8 @@
+a(href='/') Return to Home
+br
+br
+
+if hotels
+  each hotel,i in hotels
+    a(href='/users/hotels/'+hotel._id) #{hotel.hotel_name}
+    br

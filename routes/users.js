@@ -7,7 +7,7 @@ var mongoose = require('mongoose');
 var db = require('monk')('localhost/my_hotel');
 
 var User = require('../models/user');
-
+var Hotel = require('../models/hotel_database');
 
 /* GET users listing. */
 router.get('/', function(req, res, next) {
@@ -23,8 +23,99 @@ router.get('/reviews', function(req, res) {
   });
 });
 
-router.get('/bookroom',function(req,res){
-	res.render('bookroom');
+router.get('/hotels',function(req,res){
+  var hotels = db.get('hotel_database');
+  hotels.find({},{},function(err,hotels){
+    res.render('hotels',{
+      "hotels":hotels
+    });
+  });
+});
+
+router.get('/hotels/:id',function(req,res){
+  var hotels = db.get('hotel_database');
+  hotels.findOne(req.params.id,function(err,hotel){
+      if(err){
+        console.log(err);
+      }else {
+        res.render('hotel',{
+          "hotel":hotel
+        });
+      }
+  });
+});
+
+router.get('/bookroom/:id',function(req,res){
+  var hotels = db.get('hotel_database');
+  hotels.findOne(req.params.id,function(err,hotel){
+    if(err){
+      console.log(err);
+    }else{
+	   res.render('bookroom',{
+       "hotel":hotel
+     });
+    }
+  });
+});
+
+router.post('/bookroom',function(req,res){
+
+  var hotel_id = req.body.hotel_id;
+  var adults = req.body.cnt_adult;
+  var child = req.body.cnt_child;
+  var visit_date = req.body.visit_date;
+  var leave_date = req.body.leave_date;
+  var room = req.body.cnt_room;
+  var type = req.body.room_type;
+
+  req.checkBody('cnt_adult','Enter the number of adults.').notEmpty();
+  req.checkBody('cnt_child','Enter the number of child.').notEmpty();
+  req.checkBody('visit_date','Enter the start date.').notEmpty();
+  req.checkBody('leave_date','Enter the leave date.').notEmpty();
+  req.checkBody('cnt_room','Enter the number of rooms.').notEmpty();
+
+  var errors = req.validationErrors();
+
+  var hotels = db.get('hotel_database');
+
+  console.log(hotel_id);
+  if(errors){
+    hotels.findOne({_id: hotel_id},function(err,hotel){
+      if(err){
+        console.log(err);
+      }else{
+        res.render('bookroom',{
+          "hotel":hotel,
+          "errors":errors,
+          "cnt_adult":adults,
+          "cnt_child":child,
+          "visit_date":visit_date,
+          "leave_date":leave_date,
+          "cnt_room":room,
+          "room_type":type
+      });
+    }
+    });
+  }else{
+      var rooms_database = db.get('rooms_database');
+      rooms_database.insert({
+        "hotel_id":hotel_id,
+        "cnt_adult":adults,
+        "cnt_child":child,
+        "visit_date":visit_date,
+        "leave_date":leave_date,
+        "cnt_room":room,
+        "room_type":type
+      },function(err,room){
+        if(err){
+          res.send("there was as issue submitting");
+        }else{
+          req.flash('success','congo u booked the room');
+          res.location('/');
+          res.redirect('/');
+        }
+      });
+  }
 });
 
 router.get('/login',function(req,res){

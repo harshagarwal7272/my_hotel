@@ -4,12 +4,16 @@ block content
 	h1 Book Room
 	p Please book your room using the form below
 
+	p #{hotel.hotel_name}
+
 	ul.errors
 		if errors
 			each error,i in errors
 				li.alert #{error.msg}
 
 	form(method='post',action='/users/bookroom',enctype='url-encoded')
+		.form-group
+			input.form-control(name='hotel_id',type='hidden',value=hotel._id)
 		.form-group
 			label Number of adults
 			input.form-control(name='cnt_adult',type='number',value=cnt_adult)
