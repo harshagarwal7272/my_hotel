@@ -1,8 +1,15 @@
-a(href='/') Return to Home
-br
-br
+doctype html
+html
+  head
+    link(rel='stylesheet', href='/stylesheets/bootstrap.css')
+    link(rel='stylesheet', href='/stylesheets/style.css')
 
-if hotels
-  each hotel,i in hotels
-    a(href='/users/hotels/'+hotel._id) #{hotel.hotel_name}
+    a(href='/') Return to Home
     br
+    br
+    
+    if hotels
+      each hotel,i in hotels
+        #bordering
+          a(href='/users/hotels/'+hotel._id) #{hotel.hotel_name}
+        br

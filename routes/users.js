@@ -14,6 +14,11 @@ router.get('/', function(req, res, next) {
   res.send('respond with a resource');
 });
 
+router.get('/our_resort', function(req, res, next) {
+  res.render('our_resorts');
+});
+
+
 router.get('/profile',ensureAuthenticated, function(req, res) {
   var rooms_database = db.get('rooms_database');
   var hotels = db.get('hotel_database');
@@ -72,6 +77,7 @@ router.get('/bookroom/:id',function(req,res){
 router.post('/bookroom',function(req,res){
 
   var hotel_id = req.body.hotel_id;
+  var hotel_name = req.body.hotel_name;
   var adults = req.body.cnt_adult;
   var child = req.body.cnt_child;
   var visit_date = req.body.visit_date;
@@ -79,6 +85,7 @@ router.post('/bookroom',function(req,res){
   var room = req.body.cnt_room;
   var type = req.body.room_type;
   var user_id = req.user._id;
+  var date = new Date();
 
   req.checkBody('cnt_adult','Enter the number of adults.').notEmpty();
   req.checkBody('cnt_child','Enter the number of child.').notEmpty();
@@ -95,7 +102,10 @@ router.post('/bookroom',function(req,res){
     hotels.findOne({_id: hotel_id},function(err,hotel){
       if(err){
         console.log(err);
-      }else{
+      }
+      else{
+
+  //      hotel.updateOne(document,{$set:},null);
         res.render('bookroom',{
           "hotel":hotel,
           "errors":errors,
@@ -109,24 +119,37 @@ router.post('/bookroom',function(req,res){
     }
     });
   }else{
-      var rooms_database = db.get('rooms_database');
-      rooms_database.insert({
-        "user_id":user_id,
-        "hotel_id":hotel_id,
-        "cnt_adult":adults,
-        "cnt_child":child,
-        "visit_date":visit_date,
-        "leave_date":leave_date,
-        "cnt_room":room,
-        "room_type":type
-      },function(err,room){
-        if(err){
-          res.send("there was as issue submitting");
-        }else{
-          req.flash('success','congo u booked the room');
+      hotels.findOne({_id:hotel_id},function(err,hotel){
+        var upd_room = hotel.rooms-room;
+        if(upd_room<0){
+          req.flash('failure','Room booking failed.Not enough rooms available');
           res.location('/');
           res.redirect('/');
-        }
+        }else{
+          var hotels = db.get('hotel_database');
+          hotels.update({_id:hotel_id},{ $set:{rooms:upd_room} },null);
+          console.log(room);
+          var rooms_database = db.get('rooms_database');
+          rooms_database.insert({
+            "user_id":user_id,
+            "hotel_id":hotel_id,
+            "hotel_name":hotel_name,
+            "cnt_adult":adults,
+            "cnt_child":child,
+            "visit_date":visit_date,
+            "leave_date":leave_date,
+            "cnt_room":room,
+            "room_type":type
+          },function(err,room){
+            if(err){
+              res.send("there was as issue submitting");
+            }else{
+              req.flash('success','congo u booked the room');
+              res.location('/');
+              res.redirect('/');
+            }
+        });
+      }
       });
   }
 });

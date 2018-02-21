@@ -1,6 +1,23 @@
-if rooms
-  each room,i in rooms
-    p #{room.visit_date} in #{room.hotel_id}
-    br
-      
-p Hello
+doctype html
+html
+	head
+		link(rel='stylesheet', href='/stylesheets/bootstrap.css')
+		link(rel='stylesheet', href='/stylesheets/style.css')
+		
+		a(href='/') HOME
+		br
+		br
+		
+		#bordering_user
+			p Hello #{user.name}	
+		
+		br
+		
+		if rooms
+			each room,i in rooms
+				#bordering
+					p Visited #{room.hotel_name}
+					p Visit Date #{room.visit_date}
+					p Leave Date #{room.leave_date}
+					br
+				br

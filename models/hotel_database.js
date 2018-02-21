@@ -16,6 +16,14 @@ var hotelSchema = mongoose.Schema({
 	email:{
 		type:String,
     required:true
+	},
+	rooms:{
+		type: Number,
+		required:true
+	},
+	cost:{
+		type: Number,
+		required: true
 	}
 });
 
