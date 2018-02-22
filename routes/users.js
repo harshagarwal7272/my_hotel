@@ -85,7 +85,49 @@ router.post('/bookroom',function(req,res){
   var room = req.body.cnt_room;
   var type = req.body.room_type;
   var user_id = req.user._id;
-  var date = new Date();
+  var jane_ka_date = new Date(visit_date);
+  var wapis_ka_date = new Date(leave_date);
+  var current_date = new Date();
+
+  var date_error=0;
+
+  if(jane_ka_date.getYear()<current_date.getYear())
+  {
+    date_error=1;
+  }
+  else if(jane_ka_date.getYear()==current_date.getYear())
+  {
+    if(jane_ka_date.getMonth()<current_date.getMonth())
+    {
+      date_error=1;
+    }
+    else if(jane_ka_date.getMonth()==current_date.getMonth())
+    {
+      if(jane_ka_date.getDay()<current_date.getDay())
+      {
+        date_error=1;
+      }
+    }
+  }
+
+  if(jane_ka_date.getYear()>wapis_ka_date.getYear())
+  {
+    date_error=1;
+  }
+  else if(jane_ka_date.getYear()==wapis_ka_date.getYear())
+  {
+    if(jane_ka_date.getMonth()>wapis_ka_date.getMonth())
+    {
+      date_error=1;
+    }
+    else if(jane_ka_date.getMonth()==wapis_ka_date.getMonth())
+    {
+      if(jane_ka_date.getDay()>=wapis_ka_date.getDay())
+      {
+        date_error=1;
+      }
+    }
+  }
 
   req.checkBody('cnt_adult','Enter the number of adults.').notEmpty();
   req.checkBody('cnt_child','Enter the number of child.').notEmpty();
@@ -97,7 +139,6 @@ router.post('/bookroom',function(req,res){
 
   var hotels = db.get('hotel_database');
 
-  console.log(hotel_id);
   if(errors){
     hotels.findOne({_id: hotel_id},function(err,hotel){
       if(err){
@@ -118,6 +159,24 @@ router.post('/bookroom',function(req,res){
       });
     }
     });
+  }else if(date_error==1){
+    console.log("date error");
+    hotels.findOne({_id: hotel_id},function(err,hotel){
+      if(err){
+        console.log(err);
+        return;
+      }
+      res.render('bookroom',{
+        "hotel":hotel,
+        "errors":[{"msg":"Invalid dates provided"}],
+        "cnt_adult":adults,
+        "cnt_child":child,
+        "visit_date":visit_date,
+        "leave_date":leave_date,
+        "cnt_room":room,
+        "room_type":type
+    });
+    });
   }else{
       hotels.findOne({_id:hotel_id},function(err,hotel){
         var upd_room = hotel.rooms-room;
@@ -128,7 +187,6 @@ router.post('/bookroom',function(req,res){
         }else{
           var hotels = db.get('hotel_database');
           hotels.update({_id:hotel_id},{ $set:{rooms:upd_room} },null);
-          console.log(room);
           var rooms_database = db.get('rooms_database');
           rooms_database.insert({
             "user_id":user_id,
@@ -306,7 +364,7 @@ function ensureAuthenticated(req,res,next){
   if(req.isAuthenticated()){
     return next();
   }else{
-    req.flash('danger','please log in to review');
+    req.flash('danger','please log In first');
     res.redirect('/users/login');
   }
 }
