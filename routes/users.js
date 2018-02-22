@@ -32,9 +32,16 @@ router.get('/profile',ensureAuthenticated, function(req, res) {
 
 router.get('/reviews', function(req, res) {
   var reviews = db.get('reviews');
+  var admin = null;
+  var username = req.user.username;
+  if(username=="admin")
+  {
+    admin = "admin";
+  }
   reviews.find({},{},function(err,reviews){
       res.render('reviews',{
-        "reviews":reviews
+        "reviews":reviews,
+        "admin":admin
     });
   });
 });
@@ -273,46 +280,62 @@ router.post('/register',function(req,res,next){
 });
 
 router.post('/reviews',ensureAuthenticated,function(req,res,next){
-  console.log("he yaa");
-  var username = req.user.username;
-  var body = req.body.body;
-
-/*
-  var users = db.get("users");
-  var username;
-  users.findOne(user_id,function(err,user){
-    username = user.username
-    console.log(username);
-  });
-*/
-  console.log(username);
-  req.checkBody('body','Review is required').notEmpty();
-
-  var errors = req.validationErrors();
-
-  if(errors){
-    console.log(errors);
-    var reviews = db.get("reviews");
-    reviews.find({},{},function(err,reviews){
-        res.render('reviews',{
-          "errors":errors,
-          "reviews":reviews
-      });
+  var kya_karu = req.body.kya_karu;
+  if(kya_karu=="delete"){
+    var reviews = db.get('reviews');
+    var id = req.body.review_id;
+    console.log(id);
+    reviews.remove({"_id": id},function(err){
+      if(err){
+        console.log(err);
+        return;
+      }
+      req.flash('success','review deleted');
+      res.location('/');
+      res.redirect('/');
     });
   }else{
-    var reviews = db.get("reviews");
-    reviews.insert({
-      "username":username,
-      "body":body
-    },function(err,review){
-      if(err){
-        res.send("error");
-      }else{
-        req.flash('success','review submitted');
-        res.location('/');
-        res.redirect('/');
-      }
+    var username = req.user.username;
+    var body = req.body.body;
+
+  /*
+    var users = db.get("users");
+    var username;
+    users.findOne(user_id,function(err,user){
+      username = user.username
+      console.log(username);
     });
+  */
+
+    console.log(username);
+    req.checkBody('body','Review is required').notEmpty();
+
+    var errors = req.validationErrors();
+
+    if(errors){
+      console.log(errors);
+      var reviews = db.get("reviews");
+      reviews.find({},{},function(err,reviews){
+          res.render('reviews',{
+            "errors":errors,
+            "reviews":reviews
+        });
+      });
+    }else{
+      var reviews = db.get("reviews");
+      reviews.insert({
+        "username":username,
+        "body":body
+      },function(err,review){
+        if(err){
+          res.send("error");
+        }else{
+          req.flash('success','review submitted');
+          res.location('/');
+          res.redirect('/');
+        }
+      });
+    }
   }
 });
 
