@@ -11,5 +11,10 @@ html
     if hotels
       each hotel,i in hotels
         #bordering
-          a(href='/users/hotels/'+hotel._id) #{hotel.hotel_name}
+          a(href='/users/hotels/'+hotel._id) #{hotel.hotel_name} likes #{hotel.pasand_count}
+          if user
+            form(method='post',action='/users/hotels')
+              .form-group
+                input.form-control(name='hotel_id',type='hidden',value=hotel._id)
+              input.btn(name='submit',type='submit',value='Love')
         br

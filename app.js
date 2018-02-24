@@ -96,6 +96,7 @@ app.use('/our_resort',our_resort);
 app.use('/facilities',facilities);
 
 
+
 /*
 app.get('/contact', function(req, res) {
 	res.render('contact');

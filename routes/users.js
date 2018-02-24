@@ -23,6 +23,10 @@ router.get('/profile',ensureAuthenticated, function(req, res) {
   var rooms_database = db.get('rooms_database');
   var hotels = db.get('hotel_database');
   var user__id = req.user._id;
+
+
+//  hotels.update({hotel_name:"Subu"},{$push:{pasand:user__id}});
+
   rooms_database.find({user_id:user__id},function(err,rooms){
     res.render('profile',{
       "rooms":rooms
@@ -30,10 +34,47 @@ router.get('/profile',ensureAuthenticated, function(req, res) {
   });
 });
 
+router.post('/profile',function(req,res){
+  var hotel_name = req.body.hotel_name;
+  console.log(hotel_name);
+  var room_id = req.body.room_id;
+  var hotels = db.get('hotel_database');
+  var rooms = db.get('rooms_database');
+  var rooms_to_add = 0;
+  var valid = "nope";
+  rooms.findOne({_id:room_id},function(err,room){
+    if(err){
+      console.log(err);
+      return;
+    }else{
+      if(room.valid=="available"){
+        rooms_to_add = parseInt(room.cnt_room);
+      }
+      hotels.findOne({hotel_name:hotel_name},function(err,hotel){
+        if(err){
+          console.log(err);
+          return;
+        }else{
+          var upd_value = hotel.rooms + rooms_to_add;
+          hotels.update({hotel_name:hotel_name},{$set:{rooms:upd_value}});
+          rooms.remove({_id:room_id});
+          req.flash('success','u successfully cancelled the booking,par paise wapis nai karunga :P');
+          res.location('/');
+          res.redirect('/');
+        }
+      });
+    }
+  });
+});
+
 router.get('/reviews', function(req, res) {
   var reviews = db.get('reviews');
   var admin = null;
-  var username = req.user.username;
+  var username = null;
+  if(req.user!=null)
+  {
+    username = req.user.username;
+  }
   if(username=="admin")
   {
     admin = "admin";
@@ -52,6 +93,47 @@ router.get('/hotels',function(req,res){
     res.render('hotels',{
       "hotels":hotels
     });
+  });
+});
+
+router.post('/hotels',function(req,res){
+  var hotels = db.get('hotel_database');
+  var hotel_id = req.body.hotel_id;
+  var username = req.user.username;
+  hotels.findOne({_id:hotel_id},function(err,hotel){
+    if(err){
+      console.log(err);
+      return;
+    }else{
+      var counter = hotel.pasand_count;
+      if(counter==null || counter==NaN)
+      {
+        counter=0;
+      }
+      var is_present=false;
+      for(var i=0;i<counter;i++)
+      {
+        if(hotel.pasand[i]==username)
+        {
+          is_present=true;
+        }
+      }
+      if(is_present==false){
+        hotels.update({_id:hotel_id},{$push:{pasand:username}});
+        hotels.update({_id:hotel_id},{$set:{pasand_count:counter+1}});
+        res.location('/users/hotels');
+        res.redirect('/users/hotels');
+      }else{
+        var counter = hotel.pasand_count;
+        hotels.update({_id:hotel_id},{$set:{pasand_count:counter-1}});
+        var pasand = hotel.pasand;
+        var index = pasand.indexOf(username);
+        pasand.splice(index,1);
+        hotels.update({_id:hotel_id},{$set:{pasand:pasand}});
+        res.location('/users/hotels');
+        res.redirect('/users/hotels');
+      }
+    }
   });
 });
 
@@ -92,6 +174,7 @@ router.post('/bookroom',function(req,res){
   var room = req.body.cnt_room;
   var type = req.body.room_type;
   var user_id = req.user._id;
+  var valid = req.body.valid;
   var jane_ka_date = new Date(visit_date);
   var wapis_ka_date = new Date(leave_date);
   var current_date = new Date();
@@ -100,17 +183,19 @@ router.post('/bookroom',function(req,res){
 
   if(jane_ka_date.getYear()<current_date.getYear())
   {
+    console.log('year');
     date_error=1;
   }
   else if(jane_ka_date.getYear()==current_date.getYear())
   {
     if(jane_ka_date.getMonth()<current_date.getMonth())
     {
+      console.log('month');
       date_error=1;
     }
     else if(jane_ka_date.getMonth()==current_date.getMonth())
     {
-      if(jane_ka_date.getDay()<current_date.getDay())
+      if(jane_ka_date.getDate()<current_date.getDate())
       {
         date_error=1;
       }
@@ -129,7 +214,7 @@ router.post('/bookroom',function(req,res){
     }
     else if(jane_ka_date.getMonth()==wapis_ka_date.getMonth())
     {
-      if(jane_ka_date.getDay()>=wapis_ka_date.getDay())
+      if(jane_ka_date.getDate()>=wapis_ka_date.getDate())
       {
         date_error=1;
       }
@@ -204,7 +289,8 @@ router.post('/bookroom',function(req,res){
             "visit_date":visit_date,
             "leave_date":leave_date,
             "cnt_room":room,
-            "room_type":type
+            "room_type":type,
+            "valid":valid
           },function(err,room){
             if(err){
               res.send("there was as issue submitting");

@@ -24,6 +24,12 @@ var hotelSchema = mongoose.Schema({
 	cost:{
 		type: Number,
 		required: true
+	},
+	pasand:{
+		type: Array
+	},
+	pasand_count:{
+		type: Number
 	}
 });
 
