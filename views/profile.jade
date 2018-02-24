@@ -20,10 +20,11 @@ html
 					p Visit Date #{room.visit_date}
 					p Leave Date #{room.leave_date}
 					br
-					form(method='post',action='/users/profile')
-						.form-group
-							input.form-control(name='hotel_name',type='hidden',value=room.hotel_name)
-						.form-group
-							input.form-control(name='room_id',type='hidden',value=room._id)
-						input.btn(name='submit',type='submit',value='Cancel booking')
+					if room.cancel
+						form(method='post',action='/users/profile')
+							.form-group
+								input.form-control(name='hotel_name',type='hidden',value=room.hotel_name)
+							.form-group
+								input.form-control(name='room_id',type='hidden',value=room._id)
+							input.btn(name='submit',type='submit',value='Cancel booking')
 				br

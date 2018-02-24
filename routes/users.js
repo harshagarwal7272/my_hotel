@@ -14,19 +14,12 @@ router.get('/', function(req, res, next) {
   res.send('respond with a resource');
 });
 
-router.get('/our_resort', function(req, res, next) {
-  res.render('our_resorts');
-});
-
-
 router.get('/profile',ensureAuthenticated, function(req, res) {
   var rooms_database = db.get('rooms_database');
   var hotels = db.get('hotel_database');
   var user__id = req.user._id;
-
-
 //  hotels.update({hotel_name:"Subu"},{$push:{pasand:user__id}});
-
+  var current_date = new Date();
   rooms_database.find({user_id:user__id},function(err,rooms){
     res.render('profile',{
       "rooms":rooms
@@ -41,7 +34,6 @@ router.post('/profile',function(req,res){
   var hotels = db.get('hotel_database');
   var rooms = db.get('rooms_database');
   var rooms_to_add = 0;
-  var valid = "nope";
   rooms.findOne({_id:room_id},function(err,room){
     if(err){
       console.log(err);
@@ -382,7 +374,7 @@ router.post('/reviews',ensureAuthenticated,function(req,res,next){
     });
   }else{
     var username = req.user.username;
-    var body = req.body.body;
+    var body = req.body.aish;
 
   /*
     var users = db.get("users");
@@ -458,6 +450,47 @@ passport.use(new LocalStrategy(
 ));
 
 router.post('/login',passport.authenticate('local',{failureRedirect:'/users/login',failureFlash:'Invalid username or password'}),function(req,res){
+
+  var rooms_database = db.get('rooms_database');
+  var user__id = req.user._id;
+  var current_date = new Date();
+  rooms_database.find({user_id:user__id},function(err,rooms){
+    for(var i=0;i<rooms.length;i++)
+    {
+      if(rooms[i].cancel==null)
+      {
+        continue;
+      }
+      var id = rooms[i]._id;
+      var hotel_id = rooms[i].hotel_id;
+      var jane_ka_date = new Date(rooms[i].visit_date);
+      var date_error=0;
+      if(jane_ka_date.getYear()<current_date.getYear())
+      {
+        date_error=1;
+      }
+      else if(jane_ka_date.getYear()==current_date.getYear())
+      {
+        if(jane_ka_date.getMonth()<current_date.getMonth())
+        {
+          date_error=1;
+        }
+        else if(jane_ka_date.getMonth()==current_date.getMonth())
+        {
+          if(jane_ka_date.getDate()<current_date.getDate())
+          {
+            date_error=1;
+          }
+        }
+      }
+      if(date_error==1)
+      {
+        rooms_database.update({_id:id},{$set:{cancel:null}});
+      }
+      console.log(rooms[i].cancel);
+    }
+  });
+
 	console.log('Authentication success');
 	req.flash('success','you are now logged in');
 	res.redirect('/');
