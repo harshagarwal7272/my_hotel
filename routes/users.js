@@ -80,7 +80,64 @@ router.get('/reviews', function(req, res) {
 });
 
 router.get('/hotels',function(req,res){
+
   var hotels = db.get('hotel_database');
+  var rooms_database = db.get('rooms_database');
+  var current_date = new Date();
+
+  rooms_database.find({},function(err,rooms){
+    var upd_rooms = new Map();
+    for(var i=0;i<rooms.length;i++)
+    {
+      if(rooms[i].valid=="nope")
+      {
+        continue;
+      }
+      var id = rooms[i]._id;
+      var hotel_name = rooms[i].hotel_name;
+      var wapis_ka_date = new Date(rooms[i].leave_date);
+      var date_error=0;
+      var cnt_room = rooms[i].cnt_room;
+      if(wapis_ka_date.getYear()<current_date.getYear())
+      {
+        date_error=1;
+      }
+      else if(wapis_ka_date.getYear()==current_date.getYear())
+      {
+        if(wapis_ka_date.getMonth()<current_date.getMonth())
+        {
+          date_error=1;
+        }
+        else if(wapis_ka_date.getMonth()==current_date.getMonth())
+        {
+          if(wapis_ka_date.getDate()<current_date.getDate())
+          {
+            date_error=1;
+          }
+        }
+      }
+      if(date_error==1)
+      {
+        hotels.findOne({hotel_name:hotel_name},function(err,hotel){
+          if(err){
+            console.log(err);
+            return;
+          }else{
+            var cnt_rooms = hotel.rooms;
+            if(upd_rooms[hotel_name]==null || upd_rooms[hotel_name]==NaN)
+            {
+              upd_rooms[hotel_name]=cnt_rooms;
+            }
+            upd_rooms[hotel_name] = parseInt(upd_rooms[hotel_name]) + parseInt(cnt_room);
+            hotels.update({hotel_name:hotel_name},{$set:{rooms:parseInt(upd_rooms[hotel_name])}});
+          }
+        });
+        rooms_database.update({_id:id},{$set:{valid:"nope"}});
+      }
+    }
+  });
+
+
   hotels.find({},{},function(err,hotels){
     res.render('hotels',{
       "hotels":hotels
@@ -490,6 +547,7 @@ router.post('/login',passport.authenticate('local',{failureRedirect:'/users/logi
       console.log(rooms[i].cancel);
     }
   });
+
 
 	console.log('Authentication success');
 	req.flash('success','you are now logged in');
