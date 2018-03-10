@@ -27,6 +27,58 @@ router.get('/profile',ensureAuthenticated, function(req, res) {
   });
 });
 
+router.post('/hotels/sort',function(req,res){
+  console.log("sort");
+  var hotel_database = db.get('hotel_database');
+  hotel_database.find({},function(err,hotels){
+    for(var i=0;i<hotels.length;i++)
+    {
+      console.log(hotels[i].hotel_name);
+    }
+
+    function compare(a,b){
+      if(a.pasand_count>b.pasand_count)
+        return false;
+      return true;
+    }
+
+    hotels.sort(compare);
+
+    for(var i=0;i<hotels.length;i++)
+    {
+      console.log(hotels[i].hotel_name+" "+hotels[i].pasand_count);
+    }
+
+    res.render('hotels',{
+      "hotels":hotels,
+      "user":req.user
+    });
+  });
+})
+
+router.post('/hotels/range',function(req,res){
+  var start = req.body.start;
+  var end = req.body.end;
+  console.log(start);
+  console.log(end);
+  var hotel_database = db.get('hotel_database');
+  var ret = [];
+  hotel_database.find({},function(err,hotels){
+    for(var i=0;i<hotels.length;i++)
+    {
+      if(hotels[i].cost>=start && hotels[i].cost<=end)
+      {
+        ret.push(hotels[i]);
+      }
+    }
+    console.log(ret);
+    res.render('hotels',{
+      "hotels":ret,
+      "user":req.user
+    });
+  });
+})
+
 router.post('/profile',function(req,res){
   var hotel_name = req.body.hotel_name;
   console.log(hotel_name);
@@ -224,6 +276,7 @@ router.post('/bookroom',function(req,res){
   var type = req.body.room_type;
   var user_id = req.user._id;
   var valid = req.body.valid;
+  var cancel = req.body.cancel;
   var jane_ka_date = new Date(visit_date);
   var wapis_ka_date = new Date(leave_date);
   var current_date = new Date();
@@ -329,26 +382,30 @@ router.post('/bookroom',function(req,res){
           var hotels = db.get('hotel_database');
           hotels.update({_id:hotel_id},{ $set:{rooms:upd_room} },null);
           var rooms_database = db.get('rooms_database');
-          rooms_database.insert({
-            "user_id":user_id,
-            "hotel_id":hotel_id,
-            "hotel_name":hotel_name,
-            "cnt_adult":adults,
-            "cnt_child":child,
-            "visit_date":visit_date,
-            "leave_date":leave_date,
-            "cnt_room":room,
-            "room_type":type,
-            "valid":valid
-          },function(err,room){
-            if(err){
-              res.send("there was as issue submitting");
-            }else{
-              req.flash('success','congo u booked the room');
-              res.location('/');
-              res.redirect('/');
-            }
-        });
+          hotels.findOne({_id:hotel_id},function(err,hotel){
+            rooms_database.insert({
+              "user_id":user_id,
+              "hotel_id":hotel_id,
+              "hotel_name":hotel_name,
+              "cnt_adult":adults,
+              "cnt_child":child,
+              "visit_date":visit_date,
+              "leave_date":leave_date,
+              "cnt_room":room,
+              "room_type":type,
+              "valid":valid,
+              "stay_cost":hotel.cost*parseInt(room),
+              "cancel":cancel
+            },function(err,room_j){
+              if(err){
+                res.send("there was as issue submitting");
+              }else{
+                req.flash('success','congo u booked the room.Your bill is '+hotel.cost*parseInt(room));
+                res.location('/');
+                res.redirect('/');
+              }
+            });
+          });
       }
       });
   }
@@ -426,12 +483,12 @@ router.post('/reviews',ensureAuthenticated,function(req,res,next){
         return;
       }
       req.flash('success','review deleted');
-      res.location('/');
-      res.redirect('/');
+      res.location('/users/reviews');
+      res.redirect('/users/reviews');
     });
   }else{
     var username = req.user.username;
-    var body = req.body.aish;
+    var body = req.body.body;
 
   /*
     var users = db.get("users");
@@ -466,8 +523,8 @@ router.post('/reviews',ensureAuthenticated,function(req,res,next){
           res.send("error");
         }else{
           req.flash('success','review submitted');
-          res.location('/');
-          res.redirect('/');
+          res.location('/users/reviews');
+          res.redirect('/users/reviews');
         }
       });
     }
