@@ -1,13 +1,14 @@
 doctype html
 html
   head
-    link(rel='stylesheet', href='/stylesheets/bootstrap.css')
+    link(rel='stylesheet', href='/stylesheets/materialize.min.css')
+    link(rel="stylesheet",href="https://fonts.googleapis.com/icon?family=Material+Icons")
     link(rel='stylesheet', href='/stylesheets/style.css')
 
     a(href='/') Return to Home
     br
     br
-    
+
     if hotels
       each hotel,i in hotels
         #bordering
@@ -27,3 +28,6 @@ html
           input.form-control(name='end')
         input.btn(name='sort_by_range',type='submit',value='sort by range')
         br
+    script(src="https://code.jquery.com/jquery-2.1.1.min.js")
+    script(src="/js/materialize.min.js")
+    script(src="/js/main.js")
